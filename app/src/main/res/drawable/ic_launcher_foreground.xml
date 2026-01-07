@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Metronome body (triangle) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,25 L35,75 L73,75 Z" />
+
+    <!-- Metronome base -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,75 L76,75 L76,80 L32,80 Z" />
+
+    <!-- Pendulum -->
+    <path
+        android:fillColor="#1E88E5"
+        android:pathData="M54,35 L54,65 M52,63 L56,63 L56,67 L52,67 Z" />
+
+    <!-- Beat indicator dot -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M54,30 m-3,0 a3,3 0,1,1 6,0 a3,3 0,1,1 -6,0" />
+</vector>
