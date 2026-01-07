@@ -19,7 +19,7 @@ enum class TimeSignature(val beatsPerMeasure: Int, val display: String) {
 
 class MetronomeEngine(private val context: Context) {
     private val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-    private val toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
+    private var toneGenerator: ToneGenerator? = null
 
     private var job: Job? = null
 
@@ -35,6 +35,16 @@ class MetronomeEngine(private val context: Context) {
     private val _timeSignature = MutableStateFlow(TimeSignature.FOUR_FOUR)
     val timeSignature: StateFlow<TimeSignature> = _timeSignature
 
+    private val _soundVolume = MutableStateFlow(80)
+    val soundVolume: StateFlow<Int> = _soundVolume
+
+    private val _vibrationIntensity = MutableStateFlow(80)
+    val vibrationIntensity: StateFlow<Int> = _vibrationIntensity
+
+    init {
+        recreateToneGenerator()
+    }
+
     fun setBpm(newBpm: Int) {
         _bpm.value = newBpm.coerceIn(40, 240)
     }
@@ -44,6 +54,26 @@ class MetronomeEngine(private val context: Context) {
         if (_isRunning.value) {
             _beatCount.value = 0
         }
+    }
+
+    fun nextTimeSignature() {
+        val currentIndex = TimeSignature.entries.indexOf(_timeSignature.value)
+        val nextIndex = (currentIndex + 1) % TimeSignature.entries.size
+        setTimeSignature(TimeSignature.entries[nextIndex])
+    }
+
+    fun setSoundVolume(volume: Int) {
+        _soundVolume.value = volume.coerceIn(0, 100)
+        recreateToneGenerator()
+    }
+
+    fun setVibrationIntensity(intensity: Int) {
+        _vibrationIntensity.value = intensity.coerceIn(0, 100)
+    }
+
+    private fun recreateToneGenerator() {
+        toneGenerator?.release()
+        toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, _soundVolume.value)
     }
 
     fun start() {
@@ -73,21 +103,25 @@ class MetronomeEngine(private val context: Context) {
     private fun beat() {
         val isAccent = (_beatCount.value % _timeSignature.value.beatsPerMeasure) == 0
 
-        // Vibration - stronger for accent beat
-        if (vibrator.hasVibrator()) {
+        // Vibration - stronger for accent beat, scaled by user intensity
+        if (vibrator.hasVibrator() && _vibrationIntensity.value > 0) {
             val duration = if (isAccent) 80L else 50L
-            val amplitude = if (isAccent) VibrationEffect.DEFAULT_AMPLITUDE else 128
-            val effect = VibrationEffect.createOneShot(duration, amplitude)
+            val baseAmplitude = if (isAccent) 255 else 180
+            val scaledAmplitude = (baseAmplitude * _vibrationIntensity.value / 100).coerceIn(1, 255)
+            val effect = VibrationEffect.createOneShot(duration, scaledAmplitude)
             vibrator.vibrate(effect)
         }
 
         // Sound - higher pitch for accent beat
-        val tone = if (isAccent) ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD else ToneGenerator.TONE_PROP_BEEP
-        toneGenerator.startTone(tone, 50)
+        if (_soundVolume.value > 0) {
+            val tone = if (isAccent) ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD else ToneGenerator.TONE_PROP_BEEP
+            toneGenerator?.startTone(tone, 50)
+        }
     }
 
     fun release() {
         stop()
-        toneGenerator.release()
+        toneGenerator?.release()
+        toneGenerator = null
     }
 }

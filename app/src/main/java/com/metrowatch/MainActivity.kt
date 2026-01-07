@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +15,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 
 class MainActivity : ComponentActivity() {
     private lateinit var metronome: MetronomeEngine
@@ -54,145 +57,196 @@ fun MetronomeScreen(metronome: MetronomeEngine) {
     val bpm by metronome.bpm.collectAsState()
     val beatCount by metronome.beatCount.collectAsState()
     val timeSignature by metronome.timeSignature.collectAsState()
+    val soundVolume by metronome.soundVolume.collectAsState()
+    val vibrationIntensity by metronome.vibrationIntensity.collectAsState()
+
+    val listState = rememberScalingLazyListState()
 
     Scaffold(
         timeText = { TimeText() }
     ) {
-        Column(
+        ScalingLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(Color.Black),
+            state = listState,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            item {
+                Spacer(modifier = Modifier.height(40.dp))
+            }
+
             // BPM Display
-            Text(
-                text = "$bpm",
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (isRunning) Color(0xFF4CAF50) else Color.White
-            )
-
-            Text(
-                text = "BPM",
-                fontSize = 16.sp,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Time Signature Display
-            Text(
-                text = timeSignature.display,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1E88E5)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Beat Counter
-            if (isRunning) {
-                val currentBeat = (beatCount % timeSignature.beatsPerMeasure) + 1
-                Text(
-                    text = "$currentBeat/${timeSignature.beatsPerMeasure}",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (currentBeat == 1) Color(0xFF4CAF50) else Color.White
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            // BPM Control Buttons
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                CompactChip(
-                    onClick = { metronome.setBpm(bpm - 5) },
-                    label = {
-                        Text("-5", fontSize = 14.sp)
-                    },
-                    colors = ChipDefaults.chipColors(
-                        backgroundColor = Color.DarkGray
+            item {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "$bpm",
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isRunning) Color(0xFF4CAF50) else Color.White
                     )
-                )
-
-                CompactChip(
-                    onClick = { metronome.setBpm(bpm - 1) },
-                    label = {
-                        Text("-1", fontSize = 14.sp)
-                    },
-                    colors = ChipDefaults.chipColors(
-                        backgroundColor = Color.DarkGray
-                    )
-                )
-
-                CompactChip(
-                    onClick = { metronome.setBpm(bpm + 1) },
-                    label = {
-                        Text("+1", fontSize = 14.sp)
-                    },
-                    colors = ChipDefaults.chipColors(
-                        backgroundColor = Color.DarkGray
-                    )
-                )
-
-                CompactChip(
-                    onClick = { metronome.setBpm(bpm + 5) },
-                    label = {
-                        Text("+5", fontSize = 14.sp)
-                    },
-                    colors = ChipDefaults.chipColors(
-                        backgroundColor = Color.DarkGray
-                    )
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Time Signature Control Buttons
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TimeSignature.entries.forEach { ts ->
-                    CompactChip(
-                        onClick = { metronome.setTimeSignature(ts) },
-                        label = {
-                            Text(ts.display, fontSize = 12.sp)
-                        },
-                        colors = ChipDefaults.chipColors(
-                            backgroundColor = if (timeSignature == ts) Color(0xFF1E88E5) else Color.DarkGray
-                        )
+                    Text(
+                        text = "BPM",
+                        fontSize = 16.sp,
+                        color = Color.Gray
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // BPM Control Buttons
+            item {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                ) {
+                    CompactChip(
+                        onClick = { metronome.setBpm(bpm - 5) },
+                        label = { Text("-5", fontSize = 14.sp) },
+                        colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
+                    )
+                    CompactChip(
+                        onClick = { metronome.setBpm(bpm - 1) },
+                        label = { Text("-1", fontSize = 14.sp) },
+                        colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
+                    )
+                    CompactChip(
+                        onClick = { metronome.setBpm(bpm + 1) },
+                        label = { Text("+1", fontSize = 14.sp) },
+                        colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
+                    )
+                    CompactChip(
+                        onClick = { metronome.setBpm(bpm + 5) },
+                        label = { Text("+5", fontSize = 14.sp) },
+                        colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
+                    )
+                }
+            }
+
+            // Time Signature Display (tap to change)
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clickable { metronome.nextTimeSignature() }
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = "박자 (탭해서 변경)",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = timeSignature.display,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1E88E5)
+                    )
+                }
+            }
+
+            // Beat Counter
+            if (isRunning) {
+                item {
+                    val currentBeat = (beatCount % timeSignature.beatsPerMeasure) + 1
+                    Text(
+                        text = "$currentBeat/${timeSignature.beatsPerMeasure}",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (currentBeat == 1) Color(0xFF4CAF50) else Color.White,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            }
+
+            // Sound Volume Control
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "소리: $soundVolume%",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        CompactChip(
+                            onClick = { metronome.setSoundVolume(soundVolume - 10) },
+                            label = { Text("-", fontSize = 16.sp) },
+                            colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
+                        )
+                        CompactChip(
+                            onClick = { metronome.setSoundVolume(soundVolume + 10) },
+                            label = { Text("+", fontSize = 16.sp) },
+                            colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
+                        )
+                    }
+                }
+            }
+
+            // Vibration Intensity Control
+            item {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "진동: $vibrationIntensity%",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        CompactChip(
+                            onClick = { metronome.setVibrationIntensity(vibrationIntensity - 10) },
+                            label = { Text("-", fontSize = 16.sp) },
+                            colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
+                        )
+                        CompactChip(
+                            onClick = { metronome.setVibrationIntensity(vibrationIntensity + 10) },
+                            label = { Text("+", fontSize = 16.sp) },
+                            colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
+                        )
+                    }
+                }
+            }
 
             // Start/Stop Button
-            Button(
-                onClick = {
-                    if (isRunning) {
-                        metronome.stop()
-                    } else {
-                        metronome.start()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = if (isRunning) Color(0xFFE53935) else Color(0xFF4CAF50)
-                ),
-                modifier = Modifier.size(80.dp)
-            ) {
-                Text(
-                    text = if (isRunning) "STOP" else "START",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
+            item {
+                Button(
+                    onClick = {
+                        if (isRunning) {
+                            metronome.stop()
+                        } else {
+                            metronome.start()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = if (isRunning) Color(0xFFE53935) else Color(0xFF4CAF50)
+                    ),
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .size(80.dp)
+                ) {
+                    Text(
+                        text = if (isRunning) "STOP" else "START",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(40.dp))
             }
         }
     }
