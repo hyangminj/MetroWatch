@@ -53,6 +53,7 @@ fun MetronomeScreen(metronome: MetronomeEngine) {
     val isRunning by metronome.isRunning.collectAsState()
     val bpm by metronome.bpm.collectAsState()
     val beatCount by metronome.beatCount.collectAsState()
+    val timeSignature by metronome.timeSignature.collectAsState()
 
     Scaffold(
         timeText = { TimeText() }
@@ -79,17 +80,29 @@ fun MetronomeScreen(metronome: MetronomeEngine) {
                 color = Color.Gray
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Time Signature Display
+            Text(
+                text = timeSignature.display,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1E88E5)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Beat Counter
             if (isRunning) {
+                val currentBeat = (beatCount % timeSignature.beatsPerMeasure) + 1
                 Text(
-                    text = "Beat: $beatCount",
-                    fontSize = 14.sp,
-                    color = Color.Gray
+                    text = "$currentBeat/${timeSignature.beatsPerMeasure}",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (currentBeat == 1) Color(0xFF4CAF50) else Color.White
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
             // BPM Control Buttons
@@ -138,7 +151,27 @@ fun MetronomeScreen(metronome: MetronomeEngine) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Time Signature Control Buttons
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TimeSignature.entries.forEach { ts ->
+                    CompactChip(
+                        onClick = { metronome.setTimeSignature(ts) },
+                        label = {
+                            Text(ts.display, fontSize = 12.sp)
+                        },
+                        colors = ChipDefaults.chipColors(
+                            backgroundColor = if (timeSignature == ts) Color(0xFF1E88E5) else Color.DarkGray
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Start/Stop Button
             Button(
