@@ -51,8 +51,8 @@ adb connect <IP주소>:<연결포트>
 
 #### 커맨드라인에서
 ```bash
-# Java 17 필요
-export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+# Java 17 필요 (아래는 Homebrew 기준 예시이며, 환경에 따라 경로가 다를 수 있습니다)
+export JAVA_HOME=$(brew --prefix openjdk@17)/libexec/openjdk.jdk/Contents/Home
 
 # 빌드 및 설치
 ./gradlew installDebug
@@ -62,7 +62,7 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
 
 - 워치와 컴퓨터가 **같은 Wi-Fi 네트워크**에 있어야 함
 - 워치 화면이 꺼지면 Wi-Fi 연결이 끊길 수 있음
-- Java 25는 Kotlin/Gradle과 호환되지 않음 → Java 17 사용
+- Java 17 초과 버전(예: Java 21)은 Kotlin/Gradle과 호환성 문제가 있을 수 있음 → Java 17 사용
 
 ---
 
