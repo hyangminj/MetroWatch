@@ -76,3 +76,6 @@ lint/tmp/
 
 # Mac
 .DS_Store
+
+# Sisyphus working files
+.sisyphus/
