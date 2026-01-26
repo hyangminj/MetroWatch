@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 108 108">
+  <!-- Background -->
+  <rect width="108" height="108" fill="#212121"/>
+
+  <!-- Inner circle gradient effect -->
+  <circle cx="54" cy="54" r="40" fill="#2C2C2C"/>
+
+  <!-- Metronome body (triangle) -->
+  <polygon points="54,25 35,75 73,75" fill="#FFFFFF"/>
+
+  <!-- Metronome base -->
+  <rect x="32" y="75" width="44" height="5" fill="#FFFFFF"/>
+
+  <!-- Pendulum line -->
+  <line x1="54" y1="35" x2="54" y2="65" stroke="#1E88E5" stroke-width="2"/>
+
+  <!-- Pendulum weight -->
+  <rect x="52" y="63" width="4" height="4" fill="#1E88E5"/>
+
+  <!-- Beat indicator dot (green) -->
+  <circle cx="54" cy="30" r="3" fill="#4CAF50"/>
+</svg>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MetroWatch Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: #333;
+            color: white;
+        }
+        canvas {
+            border: 1px solid #666;
+            margin: 10px;
+        }
+        .info { margin: 10px; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>MetroWatch App Icon Generator</h1>
+    <p>Right-click on the canvas and "Save Image As" to download the icon</p>
+
+    <div>
+        <h3>512x512 (Play Store Required)</h3>
+        <canvas id="icon512" width="512" height="512"></canvas>
+    </div>
+
+    <script>
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const scale = size / 108;
+
+            // Background
+            ctx.fillStyle = '#212121';
+            ctx.fillRect(0, 0, size, size);
+
+            // Inner circle gradient effect
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, 40 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = '#2C2C2C';
+            ctx.fill();
+
+            // Metronome body (triangle)
+            ctx.beginPath();
+            ctx.moveTo(54 * scale, 25 * scale);
+            ctx.lineTo(35 * scale, 75 * scale);
+            ctx.lineTo(73 * scale, 75 * scale);
+            ctx.closePath();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+
+            // Metronome base
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(32 * scale, 75 * scale, 44 * scale, 5 * scale);
+
+            // Pendulum line
+            ctx.beginPath();
+            ctx.moveTo(54 * scale, 35 * scale);
+            ctx.lineTo(54 * scale, 65 * scale);
+            ctx.strokeStyle = '#1E88E5';
+            ctx.lineWidth = 2 * scale;
+            ctx.stroke();
+
+            // Pendulum weight
+            ctx.fillStyle = '#1E88E5';
+            ctx.fillRect(52 * scale, 63 * scale, 4 * scale, 4 * scale);
+
+            // Beat indicator dot (green)
+            ctx.beginPath();
+            ctx.arc(54 * scale, 30 * scale, 3 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = '#4CAF50';
+            ctx.fill();
+        }
+
+        // Draw 512x512 icon
+        drawIcon(document.getElementById('icon512'), 512);
+    </script>
+
+    <div class="info">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Right-click on the 512x512 icon above</li>
+            <li>Select "Save Image As..."</li>
+            <li>Save as "app_icon_512.png"</li>
+            <li>Use this file for Play Store submission</li>
+        </ol>
+    </div>
+</body>
+</html>
