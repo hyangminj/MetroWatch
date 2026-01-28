@@ -17,7 +17,13 @@ enum class TimeSignature(val beatsPerMeasure: Int, val display: String) {
 }
 
 class MetronomeEngine(private val context: Context) {
-    private val vibrator = (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+    private val vibrator: android.os.Vibrator =
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
+        }
     private var toneGenerator: ToneGenerator? = null
 
     private var job: Job? = null
