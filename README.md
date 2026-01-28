@@ -80,4 +80,4 @@ metroWatch/
 
 ## 라이선스
 
-MIT License
+GPL License
