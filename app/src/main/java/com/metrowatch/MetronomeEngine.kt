@@ -1,11 +1,10 @@
 package com.metrowatch
 
 import android.content.Context
-import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.VibrationEffect
-import android.os.Vibrator
+import android.os.VibratorManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +17,7 @@ enum class TimeSignature(val beatsPerMeasure: Int, val display: String) {
 }
 
 class MetronomeEngine(private val context: Context) {
-    private val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    private val vibrator = (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
     private var toneGenerator: ToneGenerator? = null
 
     private var job: Job? = null
