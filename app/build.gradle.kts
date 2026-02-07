@@ -27,10 +27,12 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(localProperties.getProperty("RELEASE_STORE_FILE") ?: "")
-            storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD") ?: ""
-            keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS") ?: ""
-            keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD") ?: ""
+            if (localProperties.containsKey("RELEASE_STORE_FILE")) {
+                storeFile = file(localProperties.getProperty("RELEASE_STORE_FILE"))
+                storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
+                keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
+                keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
+            }
         }
     }
 

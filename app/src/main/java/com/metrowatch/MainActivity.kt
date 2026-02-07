@@ -24,7 +24,7 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 
 class MainActivity : ComponentActivity() {
-    private var metronomeService: MetronomeService? = null
+    private var metronomeService: MetronomeService? by mutableStateOf(null)
     private var bound = false
 
     private val connection = object : ServiceConnection {
@@ -32,11 +32,6 @@ class MainActivity : ComponentActivity() {
             val binder = service as MetronomeService.MetronomeBinder
             metronomeService = binder.getService()
             bound = true
-            setContent {
-                MetroWatchTheme {
-                    MetronomeScreen(metronomeService!!.engine)
-                }
-            }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -48,19 +43,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Start and bind to the foreground service
+        // Only bind to the service (no startForegroundService here)
         val serviceIntent = Intent(this, MetronomeService::class.java)
-        startForegroundService(serviceIntent)
         bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
 
-        // Show loading state until service connects
         setContent {
             MetroWatchTheme {
-                Box(
-                    modifier = Modifier.fillMaxSize().background(Color.Black),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Loading...", color = Color.Gray)
+                val service = metronomeService
+                if (service != null) {
+                    MetronomeScreen(service)
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(Color.Black),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Loading...", color = Color.Gray)
+                    }
                 }
             }
         }
@@ -68,13 +66,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         if (bound) {
-            // Stop service only if metronome is not running
-            val isRunning = metronomeService?.engine?.isRunning?.value == true
             unbindService(connection)
             bound = false
-            if (!isRunning) {
-                stopService(Intent(this, MetronomeService::class.java))
-            }
         }
         super.onDestroy()
     }
@@ -93,13 +86,13 @@ fun MetroWatchTheme(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun MetronomeScreen(metronome: MetronomeEngine) {
-    val isRunning by metronome.isRunning.collectAsState()
-    val bpm by metronome.bpm.collectAsState()
-    val beatCount by metronome.beatCount.collectAsState()
-    val timeSignature by metronome.timeSignature.collectAsState()
-    val soundVolume by metronome.soundVolume.collectAsState()
-    val vibrationIntensity by metronome.vibrationIntensity.collectAsState()
+fun MetronomeScreen(service: MetronomeService) {
+    val isRunning by service.isRunning.collectAsState()
+    val bpm by service.bpm.collectAsState()
+    val beatCount by service.beatCount.collectAsState()
+    val timeSignature by service.timeSignature.collectAsState()
+    val soundVolume by service.soundVolume.collectAsState()
+    val vibrationIntensity by service.vibrationIntensity.collectAsState()
 
     val listState = rememberScalingLazyListState()
 
@@ -142,22 +135,22 @@ fun MetronomeScreen(metronome: MetronomeEngine) {
                     modifier = Modifier.padding(vertical = 8.dp)
                 ) {
                     CompactChip(
-                        onClick = { metronome.setBpm(bpm - 5) },
+                        onClick = { service.setBpm(bpm - 5) },
                         label = { Text("-5", fontSize = 14.sp) },
                         colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
                     )
                     CompactChip(
-                        onClick = { metronome.setBpm(bpm - 1) },
+                        onClick = { service.setBpm(bpm - 1) },
                         label = { Text("-1", fontSize = 14.sp) },
                         colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
                     )
                     CompactChip(
-                        onClick = { metronome.setBpm(bpm + 1) },
+                        onClick = { service.setBpm(bpm + 1) },
                         label = { Text("+1", fontSize = 14.sp) },
                         colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
                     )
                     CompactChip(
-                        onClick = { metronome.setBpm(bpm + 5) },
+                        onClick = { service.setBpm(bpm + 5) },
                         label = { Text("+5", fontSize = 14.sp) },
                         colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
                     )
@@ -169,7 +162,7 @@ fun MetronomeScreen(metronome: MetronomeEngine) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .clickable { metronome.nextTimeSignature() }
+                        .clickable { service.nextTimeSignature() }
                         .padding(12.dp)
                 ) {
                     Text(
@@ -217,12 +210,12 @@ fun MetronomeScreen(metronome: MetronomeEngine) {
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         CompactChip(
-                            onClick = { metronome.setSoundVolume(soundVolume - 10) },
+                            onClick = { service.setSoundVolume(soundVolume - 10) },
                             label = { Text("-", fontSize = 16.sp) },
                             colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
                         )
                         CompactChip(
-                            onClick = { metronome.setSoundVolume(soundVolume + 10) },
+                            onClick = { service.setSoundVolume(soundVolume + 10) },
                             label = { Text("+", fontSize = 16.sp) },
                             colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
                         )
@@ -247,12 +240,12 @@ fun MetronomeScreen(metronome: MetronomeEngine) {
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         CompactChip(
-                            onClick = { metronome.setVibrationIntensity(vibrationIntensity - 10) },
+                            onClick = { service.setVibrationIntensity(vibrationIntensity - 10) },
                             label = { Text("-", fontSize = 16.sp) },
                             colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
                         )
                         CompactChip(
-                            onClick = { metronome.setVibrationIntensity(vibrationIntensity + 10) },
+                            onClick = { service.setVibrationIntensity(vibrationIntensity + 10) },
                             label = { Text("+", fontSize = 16.sp) },
                             colors = ChipDefaults.chipColors(backgroundColor = Color.DarkGray)
                         )
@@ -265,9 +258,9 @@ fun MetronomeScreen(metronome: MetronomeEngine) {
                 Button(
                     onClick = {
                         if (isRunning) {
-                            metronome.stop()
+                            service.stopMetronome()
                         } else {
-                            metronome.start()
+                            service.startMetronome()
                         }
                     },
                     colors = ButtonDefaults.buttonColors(

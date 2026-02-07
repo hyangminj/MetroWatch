@@ -30,6 +30,7 @@ class MetronomeEngine(private val context: Context) {
     private val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
     private var wakeLock: PowerManager.WakeLock? = null
 
+    private val engineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var job: Job? = null
 
     private val _isRunning = MutableStateFlow(false)
@@ -93,7 +94,7 @@ class MetronomeEngine(private val context: Context) {
 
         acquireWakeLock()
 
-        job = CoroutineScope(Dispatchers.Default).launch {
+        job = engineScope.launch {
             while (isActive && _isRunning.value) {
                 beat()
                 _beatCount.value++
@@ -149,6 +150,7 @@ class MetronomeEngine(private val context: Context) {
     }
 
     fun release() {
+        engineScope.cancel()
         stop()
         toneGenerator?.release()
         toneGenerator = null

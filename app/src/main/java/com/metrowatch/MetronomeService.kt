@@ -1,6 +1,5 @@
 package com.metrowatch
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -11,6 +10,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.flow.StateFlow
 
 class MetronomeService : Service() {
 
@@ -20,8 +20,14 @@ class MetronomeService : Service() {
     }
 
     private val binder = MetronomeBinder()
-    lateinit var engine: MetronomeEngine
-        private set
+    private lateinit var engine: MetronomeEngine
+
+    val isRunning: StateFlow<Boolean> get() = engine.isRunning
+    val bpm: StateFlow<Int> get() = engine.bpm
+    val beatCount: StateFlow<Int> get() = engine.beatCount
+    val timeSignature: StateFlow<TimeSignature> get() = engine.timeSignature
+    val soundVolume: StateFlow<Int> get() = engine.soundVolume
+    val vibrationIntensity: StateFlow<Int> get() = engine.vibrationIntensity
 
     inner class MetronomeBinder : Binder() {
         fun getService(): MetronomeService = this@MetronomeService
@@ -34,7 +40,9 @@ class MetronomeService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForegroundWithNotification()
+        if (engine.isRunning.value) {
+            startForegroundWithNotification()
+        }
         return START_STICKY
     }
 
@@ -44,6 +52,26 @@ class MetronomeService : Service() {
         engine.release()
         super.onDestroy()
     }
+
+    fun startMetronome() {
+        engine.start()
+        // Promote to foreground service to keep running in background
+        startForegroundService(Intent(this, MetronomeService::class.java))
+    }
+
+    fun stopMetronome() {
+        engine.stop()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    fun setBpm(newBpm: Int) = engine.setBpm(newBpm)
+
+    fun nextTimeSignature() = engine.nextTimeSignature()
+
+    fun setSoundVolume(volume: Int) = engine.setSoundVolume(volume)
+
+    fun setVibrationIntensity(intensity: Int) = engine.setVibrationIntensity(intensity)
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
