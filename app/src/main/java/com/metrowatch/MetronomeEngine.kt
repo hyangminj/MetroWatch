@@ -3,6 +3,7 @@ package com.metrowatch
 import android.content.Context
 import android.media.AudioManager
 import android.media.ToneGenerator
+import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.VibratorManager
 import kotlinx.coroutines.*
@@ -26,6 +27,10 @@ class MetronomeEngine(private val context: Context) {
         }
     private var toneGenerator: ToneGenerator? = null
 
+    private val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    private val engineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var job: Job? = null
 
     private val _isRunning = MutableStateFlow(false)
@@ -87,7 +92,9 @@ class MetronomeEngine(private val context: Context) {
         _isRunning.value = true
         _beatCount.value = 0
 
-        job = CoroutineScope(Dispatchers.Default).launch {
+        acquireWakeLock()
+
+        job = engineScope.launch {
             while (isActive && _isRunning.value) {
                 beat()
                 _beatCount.value++
@@ -103,6 +110,24 @@ class MetronomeEngine(private val context: Context) {
         job?.cancel()
         job = null
         _beatCount.value = 0
+        releaseWakeLock()
+    }
+
+    private fun acquireWakeLock() {
+        if (wakeLock == null) {
+            wakeLock = powerManager.newWakeLock(
+                PowerManager.PARTIAL_WAKE_LOCK,
+                "MetroWatch::MetronomeBeat"
+            )
+        }
+        wakeLock?.acquire()
+    }
+
+    @Suppress("SameParameterValue")
+    private fun releaseWakeLock() {
+        wakeLock?.let {
+            if (it.isHeld) it.release()
+        }
     }
 
     private fun beat() {
@@ -125,8 +150,11 @@ class MetronomeEngine(private val context: Context) {
     }
 
     fun release() {
+        engineScope.cancel()
         stop()
         toneGenerator?.release()
         toneGenerator = null
+        releaseWakeLock()
+        wakeLock = null
     }
 }
