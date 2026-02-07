@@ -1,6 +1,11 @@
 package com.metrowatch
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -19,23 +24,59 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 
 class MainActivity : ComponentActivity() {
-    private lateinit var metronome: MetronomeEngine
+    private var metronomeService: MetronomeService? = null
+    private var bound = false
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as MetronomeService.MetronomeBinder
+            metronomeService = binder.getService()
+            bound = true
+            setContent {
+                MetroWatchTheme {
+                    MetronomeScreen(metronomeService!!.engine)
+                }
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            metronomeService = null
+            bound = false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        metronome = MetronomeEngine(this)
+        // Start and bind to the foreground service
+        val serviceIntent = Intent(this, MetronomeService::class.java)
+        startForegroundService(serviceIntent)
+        bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
 
+        // Show loading state until service connects
         setContent {
             MetroWatchTheme {
-                MetronomeScreen(metronome)
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Color.Black),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Loading...", color = Color.Gray)
+                }
             }
         }
     }
 
     override fun onDestroy() {
+        if (bound) {
+            // Stop service only if metronome is not running
+            val isRunning = metronomeService?.engine?.isRunning?.value == true
+            unbindService(connection)
+            bound = false
+            if (!isRunning) {
+                stopService(Intent(this, MetronomeService::class.java))
+            }
+        }
         super.onDestroy()
-        metronome.release()
     }
 }
 
